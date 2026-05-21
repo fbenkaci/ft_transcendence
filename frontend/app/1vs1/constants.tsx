@@ -1,0 +1,9 @@
+export const CANVAS_W = 800;
+export const CANVAS_H = 500;
+export const PADDLE_W = 12;
+export const PADDLE_H = 80;
+export const BALL_SIZE = 10;
+export const PADDLE_SPEED = 5;
+export const INITIAL_BALL_SPEED = 5;
+export const MAX_SCORE = 7;
+export const PADDLE_MARGIN = 20;

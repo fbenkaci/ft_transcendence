@@ -99,9 +99,9 @@ export default function Page() {
 
         {/* Buttons */}
         <div className="btn-group">
-          <button id="start-btn" className="btn-start">
-            START
-          </button>
+            <Link href="/start" className="btn-start">
+              START
+            </Link>
           <div className="btn-row">
             <Link href="/login" className="btn-ghost">
               Login
