@@ -52,22 +52,25 @@ export default function Page() {
 				
 				<center>
 					<h2 className="login-username">Username</h2>
-					<div className="tr-input fake-input">
-						table-en4
-					</div>
+					<h2 className="email-username">Email</h2>
+					<h2 className="password-username">Password</h2>
 				</center>
-				
 
-				<div className="tr-input fake-input">
+				<div className="tr-username fake-input">
+					<center>
+						table-en4
+					</center>		
+				</div>
+
+				<div className="tr-email-user fake-input">
 					<center>
 						molapoug@student.42.fr
 					</center>
-					
 				</div>
 
-				<div className="tr-input fake-input">
+				<div className="tr-password fake-input">
 					<center>
-						*********
+						*************
 					</center>
 				</div>
 

@@ -519,6 +519,9 @@
 }
 
 .login-avatar {
+  position: fixed;
+  left: 100;
+  top: 80;
   width: 200px;
   height: 200px;
   border-radius: 50%;
@@ -527,9 +530,79 @@
 }
 
 .login-username {
+  position: fixed;
+  left: 110px;
+  top: 330px;
   font-family: 'Orbitron', sans-serif;
   font-size: 18px;
   color: #CDE6F5;
   letter-spacing: 0.1em;
   margin: 0;
+}
+
+.email-username {
+  position: fixed;
+  left: 110px;
+  top: 390px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 18px;
+  color: #CDE6F5;
+  letter-spacing: 0.1em;
+  margin: 0;
+}
+
+.password-username {
+  position: fixed;
+  left: 110px;
+  top: 450px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 18px;
+  color: #CDE6F5;
+  letter-spacing: 0.1em;
+  margin: 0;
+}
+
+.tr-username {
+  position: fixed;
+  left: 230px;
+  top: 320px;
+  padding: 14px 20px;
+  background: rgba(205, 230, 245, 0.05);
+  border: 1px solid rgba(205, 230, 245, 0.18);
+  border-radius: 50px;
+  color: #CDE6F5;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.tr-email-user {
+  position: fixed;
+  left: 230px;
+  top: 380px;
+  padding: 14px 20px;
+  background: rgba(205, 230, 245, 0.05);
+  border: 1px solid rgba(205, 230, 245, 0.18);
+  border-radius: 50px;
+  color: #CDE6F5;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.tr-password {
+  position: fixed;
+  left: 230px;
+  top: 440px;
+  padding: 14px 20px;
+  background: rgba(205, 230, 245, 0.05);
+  border: 1px solid rgba(205, 230, 245, 0.18);
+  border-radius: 50px;
+  color: #CDE6F5;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
 }
