@@ -1,9 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Page() {
+  const router = useRouter();
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
   useEffect(() => {
     const btn = document.getElementById("start-btn");
     if (!btn) return;
@@ -14,6 +21,27 @@ export default function Page() {
     btn.addEventListener("mousedown", handleActive);
     return () => btn.removeEventListener("mousedown", handleActive);
   }, []);
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    try {
+      const res = await fetch("http://127.0.0.1:8000/api/register/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, email, password }),
+      });
+
+      if (res.ok) {
+        router.push("/login");
+      } else {
+        const data = await res.json();
+        setError(JSON.stringify(data));
+      }
+    } catch (err) {
+      setError("Erreur de connexion au serveur.");
+    }
+  };
 
   return (
     <main className="tr-wrap">
@@ -46,40 +74,50 @@ export default function Page() {
           <h1 className="title">Login</h1>
         </div>
 
-        <div className="input-group">
-		  <input
-		  	type="text"
-			placeholder="Username"
-			className="tr-input"
-			autoComplete="Username">
-		  </input>
-          <input
-            type="email"
-            placeholder="Email"
-            className="tr-input"
-            autoComplete="email"
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            className="tr-input"
-            autoComplete="current-password"
-          />
-        </div>
+        {error && <p style={{ color: "var(--destructive)", fontSize: "14px", marginBottom: "-10px" }}>{error}</p>}
 
-        <div className="btn-group">
-          <button id="start-btn" className="btn-start">
-            Create account
-          </button>
-          <div className="btn-row">
-            <Link href="/login" className="btn-ghost">
-              Login
-            </Link>
-            <Link href="/signup" className="btn-ghost">
-              Sign in
-            </Link>
+        <form onSubmit={handleSignup} style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: "2rem" }}>
+          <div className="input-group">
+            <input
+              type="text"
+              placeholder="Username"
+              className="tr-input"
+              autoComplete="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+            <input
+              type="email"
+              placeholder="Email"
+              className="tr-input"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              className="tr-input"
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
           </div>
-        </div>
+
+          <div className="btn-group">
+            <button type="submit" id="start-btn" className="btn-start">
+              Create account
+            </button>
+            <div className="btn-row">
+              <Link href="/login" className="btn-ghost">
+                Login
+              </Link>
+              <Link href="/signup" className="btn-ghost">
+                Sign in
+              </Link>
+            </div>
+          </div>
+        </form>
       </div>
     </main>
   );
