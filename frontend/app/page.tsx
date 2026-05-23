@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Page() {
   const ballsRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const btn = document.getElementById("start-btn");
@@ -17,21 +19,28 @@ export default function Page() {
     return () => btn.removeEventListener("mousedown", handleActive);
   }, []);
 
+  const handleStartClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+    
+    if (token && token !== "undefined" && token !== "null") {
+      router.push("/start");
+    } else {
+      router.push("/login");
+    }
+  };
+
   return (
     <main className="tr-wrap">
-      {/* Floating balls */}
       <div ref={ballsRef} className="balls-layer" aria-hidden="true">
         {[...Array(5)].map((_, i) => (
           <div key={i} className={`ball ball-${i + 1}`} />
         ))}
       </div>
 
-      {/* Net */}
       <div className="net" aria-hidden="true" />
 
-      {/* Content */}
       <div className="content">
-        {/* Racket + Title */}
         <div className="title-row">
           <svg
             className="racket-svg"
@@ -71,7 +80,6 @@ export default function Page() {
               strokeWidth="1.2"
               opacity="0.25"
             />
-
             <line
               x1="22"
               y1="8"
@@ -88,7 +96,6 @@ export default function Page() {
 
         <p className="subtitle">42 · Pong · Multiplayer</p>
 
-        {/* Score bar */}
         <div className="score-bar">
           <span className="score-player">P1</span>
           <span className="score-num">0</span>
@@ -97,11 +104,10 @@ export default function Page() {
           <span className="score-player">P2</span>
         </div>
 
-        {/* Buttons */}
         <div className="btn-group">
-            <Link href="/start" className="btn-start">
-              START
-            </Link>
+          <Link href="/start" id="start-btn" className="btn-start" onClick={handleStartClick}>
+            START
+          </Link>
           <div className="btn-row">
             <Link href="/login" className="btn-ghost">
               Login
@@ -117,4 +123,3 @@ export default function Page() {
     </main>
   );
 }
-

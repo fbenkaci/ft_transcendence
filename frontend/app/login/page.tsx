@@ -1,9 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Page() {
+  const router = useRouter();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
   useEffect(() => {
     const btn = document.getElementById("start-btn");
     if (!btn) return;
@@ -14,6 +20,30 @@ export default function Page() {
     btn.addEventListener("mousedown", handleActive);
     return () => btn.removeEventListener("mousedown", handleActive);
   }, []);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    try {
+      const res = await fetch("http://127.0.0.1:8000/api/login/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        localStorage.setItem("access_token", data.access);
+        localStorage.setItem("refresh_token", data.refresh);
+        router.push("/start");
+      } else {
+        setError("Identifiants incorrects.");
+      }
+    } catch (err) {
+      setError("Erreur de connexion au serveur.");
+    }
+  };
 
   return (
     <main className="tr-wrap">
@@ -46,34 +76,42 @@ export default function Page() {
           <h1 className="title">Login</h1>
         </div>
 
-        <div className="input-group">
-          <input
-            type="email/text"
-            placeholder="Email/Username"
-            className="tr-input"
-            autoComplete="email"
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            className="tr-input"
-            autoComplete="current-password"
-          />
-        </div>
+        {error && <p style={{ color: "var(--destructive)", fontSize: "14px", marginBottom: "-10px" }}>{error}</p>}
 
-        <div className="btn-group">
-          <button id="start-btn" className="btn-start">
-            Connect
-          </button>
-          <div className="btn-row">
-            <Link href="/login" className="btn-ghost">
-              Login
-            </Link>
-            <Link href="/signup" className="btn-ghost">
-              Sign in
-            </Link>
+        <form onSubmit={handleLogin} style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: "2rem" }}>
+          <div className="input-group">
+            <input
+              type="text"
+              placeholder="Email/Username"
+              className="tr-input"
+              autoComplete="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              className="tr-input"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
           </div>
-        </div>
+
+          <div className="btn-group">
+            <button type="submit" id="start-btn" className="btn-start">
+              Connect
+            </button>
+            <div className="btn-row">
+              <Link href="/login" className="btn-ghost">
+                Login
+              </Link>
+              <Link href="/signup" className="btn-ghost">
+                Sign in
+              </Link>
+            </div>
+          </div>
+        </form>
       </div>
     </main>
   );
