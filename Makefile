@@ -18,7 +18,7 @@ install:
 	@echo "installation des dépendences frontend gngngn"
 	cd frontend && npm install
 	@echo "installation des dépendences du backend gngnng"
-	cd backend && python3 -m venv env && ./env/bin/pip install django djangorestframework django-cors-headers djangorestframework-simplejwt Pillow
+	cd backend && python3 -m venv env && ./env/bin/pip install django djangorestframework django-cors-headers djangorestframework-simplejwt Pillow pyotp
 
 fclean:
 	@echo "Nettoyage complet..."

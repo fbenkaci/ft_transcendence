@@ -16,22 +16,27 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from api.views import RegisterView, get_user_profile, update_profile, toggle_friend, get_friends_list
+from rest_framework_simplejwt.views import TokenRefreshView
+from api.views import *
 from django.conf.urls.static import static
 from django.conf import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/update_profile/', update_profile, name='update_profile'),
-    path('api/register/', RegisterView, name='register'),
-    path('api/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/login/', custom_login, name='custom_login'),
+    path('api/login/verify-2fa/', verify_2fa_login, name='verify_2fa_login'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/me/', get_user_profile, name='user_profile'),
-    path('api/update_profile/', update_profile, name='update_profile'),
+    path('api/register/', RegisterView, name='register'),
+    path('api/me/', get_user_profile, name='get_user_profile'),
+    path('api/update_profile/', update_profile, name='update_profile'),    
+    path('api/2fa/enable/', enable_2fa, name='enable_2fa'),
+    path('api/2fa/activate/', activate_2fa, name='activate_2fa'),
+    path('api/2fa/disable/', disable_2fa, name='disable_2fa'),
     path('api/friends/', get_friends_list, name='get_friends_list'),
-    path('api/friends/toggle/<str:username>/', toggle_friend, name='toggle_friend'),
-
+    path('api/friends/requests/', get_friend_requests, name='get_friend_requests'),
+    path('api/friends/request/send/<str:username>/', send_friend_request, name='send_friend_request'),
+    path('api/friends/request/respond/<str:username>/', respond_friend_request, name='respond_friend_request'),
+    path('api/friends/remove/<str:username>/', remove_friend, name='remove_friend'),
 ]
 
 if settings.DEBUG:

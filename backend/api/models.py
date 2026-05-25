@@ -24,4 +24,15 @@ class Profile(models.Model):
     def __str__(self):
         return self.user.username
 
+class FriendRequest(models.Model):
+    sender = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='sent_requests')
+    receiver = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='received_requests')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('sender', 'receiver')
+
+    def __str__(self):
+        return f"{self.sender.user.username} -> {self.receiver.user.username}"
+
 # Create your models here.

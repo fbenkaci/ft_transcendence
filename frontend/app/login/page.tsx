@@ -1,49 +1,80 @@
-"use client";
+"use client"
+import Link from "next/link"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { House, Eye, EyeOff, ShieldCheck } from 'lucide-react'
 
-import Link from "next/link";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-
-export default function Page() {
-  const router = useRouter();
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    const btn = document.getElementById("start-btn");
-    if (!btn) return;
-    const handleActive = () => {
-      btn.classList.add("active");
-      setTimeout(() => btn.classList.remove("active"), 150);
-    };
-    btn.addEventListener("mousedown", handleActive);
-    return () => btn.removeEventListener("mousedown", handleActive);
-  }, []);
+export default function LoginPage() {
+  const router = useRouter()
+  const [username, setUsername] = useState("")
+  const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  
+  const [requires2FA, setRequires2FA] = useState(false)
+  const [twoFactorCode, setTwoFactorCode] = useState("")
+  
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
+    e.preventDefault()
+    setLoading(true)
+    setError("")
+
     try {
       const res = await fetch("http://127.0.0.1:8000/api/login/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
+        body: JSON.stringify({ username, password })
+      })
 
-      const data = await res.json();
+      const data = await res.json()
 
       if (res.ok) {
-        localStorage.setItem("access_token", data.access);
-        localStorage.setItem("refresh_token", data.refresh);
-        router.push("/start");
+        if (data.requires_2fa) {
+          setRequires2FA(true)
+        } else {
+          localStorage.setItem("access_token", data.access)
+          localStorage.setItem("refresh_token", data.refresh)
+          router.push("/start")
+        }
       } else {
-        setError("Identifiants incorrects.");
+        setError(data.detail || "Identifiants ou configuration incorrecte.")
       }
-    } catch (err) {
-      setError("Erreur de connexion au serveur.");
+    } catch {
+      setError("Erreur réseau.")
+    } finally {
+      setLoading(false)
     }
-  };
+  }
+
+  const handleVerify2FA = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError("")
+
+    try {
+      const res = await fetch("http://127.0.0.1:8000/api/login/verify-2fa/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, code: twoFactorCode })
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        localStorage.setItem("access_token", data.access)
+        localStorage.setItem("refresh_token", data.refresh)
+        router.push("/start")
+      } else {
+        setError(data.error || "Code invalide.")
+      }
+    } catch {
+      setError("Erreur réseau.")
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <main className="tr-wrap">
@@ -53,66 +84,58 @@ export default function Page() {
         ))}
       </div>
 
-      <div className="net" aria-hidden="true" />
-
-      <div className="content">
-        <div className="title-row">
-          <svg
-            className="racket-svg"
-            width="48"
-            height="48"
-            viewBox="0 0 44 44"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden="true"
-          >
-            <ellipse cx="19" cy="19" rx="14" ry="14" stroke="#CDE6F5" strokeWidth="2.2" fill="none" opacity="0.9" />
-            <line x1="19" y1="5" x2="19" y2="33" stroke="#CDE6F5" strokeWidth="1.2" opacity="0.4" />
-            <line x1="5" y1="19" x2="33" y2="19" stroke="#CDE6F5" strokeWidth="1.2" opacity="0.4" />
-            <line x1="9" y1="9" x2="29" y2="29" stroke="#CDE6F5" strokeWidth="1" opacity="0.25" />
-            <line x1="29" y1="9" x2="9" y2="29" stroke="#CDE6F5" strokeWidth="1" opacity="0.25" />
-            <line x1="26" y1="30" x2="38" y2="42" stroke="#CDE6F5" strokeWidth="3" strokeLinecap="round" opacity="0.85" />
-          </svg>
-          <h1 className="title">Login</h1>
-        </div>
-
-        {error && <p style={{ color: "var(--destructive)", fontSize: "14px", marginBottom: "-10px" }}>{error}</p>}
-
-        <form onSubmit={handleLogin} style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: "2rem" }}>
-          <div className="input-group">
-            <input
-              type="text"
-              placeholder="Email/Username"
-              className="tr-input"
-              autoComplete="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              className="tr-input"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-
-          <div className="btn-group">
-            <button type="submit" id="start-btn" className="btn-start">
-              Connect
-            </button>
-            <div className="btn-row">
-              <Link href="/login" className="btn-ghost">
-                Login
-              </Link>
-              <Link href="/signup" className="btn-ghost">
-                Sign in
-              </Link>
+      <div className="account-card max-w-sm">
+        {!requires2FA ? (
+          <form onSubmit={handleLogin} className="account-fields w-full">
+            <h2 className="account-field-label text-xl mb-5 text-center">Connexion</h2>
+            
+            <div className="account-field">
+              <label className="account-field-label">Username</label>
+              <input className="tr-input" type="text" required value={username} onChange={e => setUsername(e.target.value)} />
             </div>
-          </div>
-        </form>
+
+            <div className="account-field">
+              <label className="account-field-label">Password</label>
+              <div className="password-input-wrap">
+                <input className="tr-input password-input" type={showPassword ? "text" : "password"} required value={password} onChange={e => setPassword(e.target.value)} />
+                <button type="button" className="password-toggle" onClick={() => setShowPassword(!showPassword)}>
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            {error && <p className="text-destructive text-xs mt-1 text-center">{error}</p>}
+
+            <button type="submit" disabled={loading} className="btn-start w-full mt-4">
+              {loading ? "Connexion..." : "Sign In"}
+            </button>
+            <p className="text-center text-xs opacity-60 mt-2">
+              Pas de compte ? <Link href="/signup" className="text-blue-400 hover:underline">Créer un compte</Link>
+            </p>
+          </form>
+        ) : (
+          <form onSubmit={handleVerify2FA} className="account-fields w-full">
+            <h2 className="account-field-label text-xl mb-5 text-center flex items-center justify-center gap-2 text-blue-400">
+              <ShieldCheck size={24} /> Vérification 2FA
+            </h2>
+            <p className="text-xs text-white/60 text-center mb-4">Saisissez le code temporaire généré par votre application d'authentification.</p>
+
+            <div className="account-field">
+              <label className="account-field-label">Code Authenticateur</label>
+              <input className="tr-input text-center tracking-widest font-mono text-lg" type="text" maxLength={6} required placeholder="000000" value={twoFactorCode} onChange={e => setTwoFactorCode(e.target.value)} />
+            </div>
+
+            {error && <p className="text-destructive text-xs mt-1 text-center">{error}</p>}
+
+            <button type="submit" disabled={loading} className="btn-start w-full mt-4">
+              {loading ? "Vérification..." : "Vérifier"}
+            </button>
+          </form>
+        )}
       </div>
+
+      <Link href="/" className="home-btn"><House className="w-6 h-6" /></Link>
+      <div className="net" aria-hidden="true" />
     </main>
-  );
+  )
 }
