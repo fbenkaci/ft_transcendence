@@ -73,7 +73,7 @@ export default function Page() {
 				1 vs 1
 			</Link>
 		  <div className="btn-row">
-			<Link href="/" className="btn-ghost">
+			<Link href="/online" className="btn-ghost">
 			  Online
 			</Link>
 			<Link href="/ia_vs" className="btn-ghost">

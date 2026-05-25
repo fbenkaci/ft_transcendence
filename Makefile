@@ -12,13 +12,13 @@ front:
 
 back:
 	@echo "le back run sur le port 8000"
-	cd backend && ./env/bin/python manage.py runserver
+	cd backend && ./env/bin/python manage.py runserver 0.0.0.0:8000
 
 install:
 	@echo "installation des dépendences frontend gngngn"
 	cd frontend && npm install
 	@echo "installation des dépendences du backend gngnng"
-	cd backend && python3 -m venv env && ./env/bin/pip install django djangorestframework django-cors-headers djangorestframework-simplejwt Pillow pyotp
+	cd backend && python3 -m venv env && ./env/bin/pip install django djangorestframework django-cors-headers djangorestframework-simplejwt Pillow pyotp channels daphne
 
 fclean:
 	@echo "Nettoyage complet..."
