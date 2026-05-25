@@ -17,8 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from api.views import RegisterView, get_user_profile, update_profile
-
+from api.views import RegisterView, get_user_profile, update_profile, toggle_friend, get_friends_list
 from django.conf.urls.static import static
 from django.conf import settings
 
@@ -29,7 +28,9 @@ urlpatterns = [
     path('api/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/me/', get_user_profile, name='user_profile'),
-    path('api/update_profile/', update_profile, name='update_profile')
+    path('api/update_profile/', update_profile, name='update_profile'),
+    path('api/friends/', get_friends_list, name='get_friends_list'),
+    path('api/friends/toggle/<str:username>/', toggle_friend, name='toggle_friend'),
 
 ]
 
