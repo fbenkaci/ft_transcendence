@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
 from api.views import *
+from api.metrics import metrics_view
 from django.conf.urls.static import static
 from django.conf import settings
 
@@ -37,6 +38,11 @@ urlpatterns = [
     path('api/friends/request/send/<str:username>/', send_friend_request, name='send_friend_request'),
     path('api/friends/request/respond/<str:username>/', respond_friend_request, name='respond_friend_request'),
     path('api/friends/remove/<str:username>/', remove_friend, name='remove_friend'),
+    # Bonus: endpoint de health pour la correction
+    path('health/', health, name='health'),
+    # Bonus: endpoint de status (DB + last_backup)
+    path('status/', status_view, name='status'),
+    path('metrics/', metrics_view, name='metrics'),
 ]
 
 if settings.DEBUG:
