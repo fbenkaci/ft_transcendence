@@ -33,8 +33,8 @@ export default function FriendsPage() {
     }
     try {
       const [resFriends, resRequests] = await Promise.all([
-        fetch("http://127.0.0.1:8000/api/friends/", { headers: { "Authorization": `Bearer ${token}` } }),
-        fetch("http://127.0.0.1:8000/api/friends/requests/", { headers: { "Authorization": `Bearer ${token}` } })
+        fetch("/api/friends/", { headers: { "Authorization": `Bearer ${token}` } }),
+        fetch("/api/friends/requests/", { headers: { "Authorization": `Bearer ${token}` } })
       ])
       
       if (resFriends.ok && resRequests.ok) {
@@ -83,17 +83,17 @@ export default function FriendsPage() {
 
   const handleSendRequest = () => {
     if (searchUsername.trim()) {
-      apiCall(`http://127.0.0.1:8000/api/friends/request/send/${searchUsername}/`)
+      apiCall(`/api/friends/request/send/${searchUsername}/`)
     }
   }
 
   const handleRespondRequest = (username: string, action: 'accept' | 'reject') => {
-    apiCall(`http://127.0.0.1:8000/api/friends/request/respond/${username}/`, { action })
+    apiCall(`/api/friends/request/respond/${username}/`, { action })
   }
 
   const handleRemoveFriend = (username: string) => {
     if(confirm(`Es-tu sûr de vouloir retirer ${username} de tes amis ?`)) {
-        apiCall(`http://127.0.0.1:8000/api/friends/remove/${username}/`)
+        apiCall(`/api/friends/remove/${username}/`)
     }
   }
 

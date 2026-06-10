@@ -1,9 +1,10 @@
 django
 djangorestframework
-psycopg2-binary
 django-cors-headers
 djangorestframework-simplejwt
 Pillow
+pyotp
 channels
 daphne
+psycopg2
 prometheus_client

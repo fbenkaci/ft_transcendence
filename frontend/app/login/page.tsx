@@ -22,7 +22,7 @@ export default function LoginPage() {
     setError("")
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/login/", {
+      const res = await fetch("/api/login/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password })
@@ -54,7 +54,7 @@ export default function LoginPage() {
     setError("")
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/login/verify-2fa/", {
+      const res = await fetch("/api/login/verify-2fa/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, code: twoFactorCode })

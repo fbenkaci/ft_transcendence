@@ -47,7 +47,7 @@ export default function Page() {
       return;
     }
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/me/", {
+      const res = await fetch("/api/me/", {
         headers: { "Authorization": `Bearer ${token}` }
       })
       if (res.ok) {
@@ -98,7 +98,7 @@ export default function Page() {
     if (draft.old_password) formData.append('old_password', draft.old_password);
     if (draft.password) formData.append('new_password', draft.password);
 
-    const res = await fetch("http://127.0.0.1:8000/api/update_profile/", {
+    const res = await fetch("/api/update_profile/", {
       method: "POST",
       headers: { "Authorization": `Bearer ${token}` },
       body: formData
@@ -120,7 +120,7 @@ export default function Page() {
 
   const handleSetup2FA = async () => {
     const token = localStorage.getItem("access_token");
-    const res = await fetch("http://127.0.0.1:8000/api/2fa/enable/", {
+    const res = await fetch("/api/2fa/enable/", {
       method: "POST",
       headers: { "Authorization": `Bearer ${token}` }
     })
@@ -133,7 +133,7 @@ export default function Page() {
 
   const handleConfirm2FA = async () => {
     const token = localStorage.getItem("access_token");
-    const res = await fetch("http://127.0.0.1:8000/api/2fa/activate/", {
+    const res = await fetch("/api/2fa/activate/", {
       method: "POST",
       headers: { 
         "Authorization": `Bearer ${token}`,
@@ -152,7 +152,7 @@ export default function Page() {
 
   const handleDisable2FA = async () => {
     const token = localStorage.getItem("access_token");
-    const res = await fetch("http://127.0.0.1:8000/api/2fa/disable/", {
+    const res = await fetch("/api/2fa/disable/", {
       method: "POST",
       headers: { "Authorization": `Bearer ${token}` }
     })
