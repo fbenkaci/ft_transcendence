@@ -9,6 +9,10 @@ from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 import pyotp
 from .models import Profile, FriendRequest
+import os
+from django.db import connection
+from django.utils import timezone
+import datetime
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -221,3 +225,47 @@ def get_friend_requests(request):
         "avatar_url": request.build_absolute_uri(req.sender.avatar.url) if req.sender.avatar else None
     } for req in requests]
     return Response({"requests": data}, status=status.HTTP_200_OK)
+
+from django.http import JsonResponse
+def health(request):
+    return JsonResponse({"status":"ok"}, status=200)
+
+
+def status_view(request):
+    """Return simple status JSON with DB connectivity and last backup timestamp.
+
+    - `db`: 'ok' if a DB cursor can be acquired, else 'down'
+    - `last_backup`: ISO timestamp of newest file in /backups or null
+    """
+    result = {
+        "app": "transcendence",
+        "status": "ok",
+        "db": "unknown",
+        "last_backup": None,
+        "checked_at": timezone.now().isoformat(),
+    }
+
+    # Check DB connectivity
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            _ = cursor.fetchone()
+        result["db"] = "ok"
+    except Exception:
+        result["db"] = "down"
+        result["status"] = "degraded"
+
+    # Check backups folder (/backups mounted from host)
+    backups_dir = "/backups"
+    try:
+        if os.path.isdir(backups_dir):
+            files = [os.path.join(backups_dir, f) for f in os.listdir(backups_dir) if f.startswith("db_")]
+            files = [f for f in files if os.path.isfile(f)]
+            if files:
+                newest = max(files, key=os.path.getmtime)
+                result["last_backup"] = datetime.datetime.fromtimestamp(os.path.getmtime(newest), tz=datetime.timezone.utc).isoformat()
+    except Exception:
+        # ignore backup errors
+        pass
+
+    return JsonResponse(result, status=200 if result["db"] == "ok" else 503)
