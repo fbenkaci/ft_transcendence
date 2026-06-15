@@ -80,6 +80,9 @@ export default function Page() {
               1 vs 1 IA 🤖
             </Link>
 		  </div>
+			<Link href="/tournaments" className="btn-ghost">
+			  🏆 Tournaments
+			</Link>
 		</div>
 	  </div>
 	</main>

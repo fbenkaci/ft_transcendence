@@ -7,12 +7,18 @@ from rest_framework import status
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
+from .models import Tournament, TournamentParticipant, TournamentMatch
+from .serializers import TournamentSerializer
+from .tournament_service import create_bracket
+from django.db import models
+from django.http import JsonResponse
 import pyotp
 from .models import Profile, FriendRequest
 import os
 from django.db import connection
 from django.utils import timezone
 import datetime
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -226,7 +232,98 @@ def get_friend_requests(request):
     } for req in requests]
     return Response({"requests": data}, status=status.HTTP_200_OK)
 
-from django.http import JsonResponse
+
+
+@api_view(['GET', 'POST'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def tournaments(request):
+    if request.method == 'GET':
+        qs = Tournament.objects.all().order_by('-created_at')
+        return Response(TournamentSerializer(qs, many=True).data)
+
+    name = (request.data.get('name') or '').strip()
+    if not name:
+        return Response({"error": "Nom requis"}, status=status.HTTP_400_BAD_REQUEST)
+    max_players = int(request.data.get('max_players', 8))
+    if max_players < 2:
+        return Response({"error": "max_players doit être >= 2"}, status=status.HTTP_400_BAD_REQUEST)
+
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+    tournament = Tournament.objects.create(name=name, creator=profile, max_players=max_players)
+    TournamentParticipant.objects.create(tournament=tournament, player=profile)
+    return Response(TournamentSerializer(tournament).data, status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def tournament_detail(request, tid):
+    tournament = get_object_or_404(Tournament, id=tid)
+    return Response(TournamentSerializer(tournament).data)
+
+
+@api_view(['POST'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def join_tournament(request, tid):
+    tournament = get_object_or_404(Tournament, id=tid)
+    if tournament.status != 'pending':
+        return Response({"error": "Inscriptions fermées"}, status=status.HTTP_400_BAD_REQUEST)
+    if tournament.participants.count() >= tournament.max_players:
+        return Response({"error": "Tournoi complet"}, status=status.HTTP_400_BAD_REQUEST)
+
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+    _, created = TournamentParticipant.objects.get_or_create(tournament=tournament, player=profile)
+    if not created:
+        return Response({"error": "Déjà inscrit"}, status=status.HTTP_400_BAD_REQUEST)
+    return Response({"message": "Inscrit"}, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def leave_tournament(request, tid):
+    tournament = get_object_or_404(Tournament, id=tid)
+    if tournament.status != 'pending':
+        return Response({"error": "Tournoi déjà démarré"}, status=status.HTTP_400_BAD_REQUEST)
+    profile = request.user.profile
+    deleted, _ = TournamentParticipant.objects.filter(tournament=tournament, player=profile).delete()
+    if not deleted:
+        return Response({"error": "Pas inscrit"}, status=status.HTTP_400_BAD_REQUEST)
+    return Response({"message": "Désinscrit"}, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def start_tournament(request, tid):
+    tournament = get_object_or_404(Tournament, id=tid)
+    if tournament.creator != request.user.profile:
+        return Response({"error": "Seul le créateur peut démarrer"}, status=status.HTTP_403_FORBIDDEN)
+    if tournament.status != 'pending':
+        return Response({"error": "Déjà démarré"}, status=status.HTTP_400_BAD_REQUEST)
+    if tournament.participants.count() < 2:
+        return Response({"error": "Au moins 2 joueurs requis"}, status=status.HTTP_400_BAD_REQUEST)
+
+    create_bracket(tournament)
+    return Response(TournamentSerializer(tournament).data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def my_tournament_match(request, tid):
+    tournament = get_object_or_404(Tournament, id=tid)
+    profile = request.user.profile
+    match = tournament.matches.filter(
+        status='pending',
+    ).filter(models.Q(player1=profile) | models.Q(player2=profile)).order_by('round', 'slot').first()
+    if not match:
+        return Response({"match_id": None})
+    return Response({"match_id": match.id, "round": match.round})
+
+
 def health(request):
     return JsonResponse({"status":"ok"}, status=200)
 

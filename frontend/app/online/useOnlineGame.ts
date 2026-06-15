@@ -6,7 +6,9 @@ import {
   BALL_SIZE, PADDLE_MARGIN, MAX_SCORE,
 } from "../1vs1/constants";
 
-export type OnlinePhase = "idle" | "waiting" | "playing" | "scored" | "gameover" | "disconnected";
+export type OnlinePhase =
+  | "idle" | "waiting" | "playing" | "scored"
+  | "gameover" | "disconnected" | "paused";
 
 interface RemoteState {
   p1y: number;
@@ -23,6 +25,12 @@ export interface OnlineUI {
   score1: number;
   score2: number;
   winner: 1 | 2 | null;
+  player: 1 | 2 | null;
+}
+
+export interface OnlineGameOptions {
+  tournamentMatchId?: number | null;
+  onGameOver?: (winner: 1 | 2 | null) => void;
 }
 
 const initialRemote: RemoteState = {
@@ -35,15 +43,20 @@ const initialRemote: RemoteState = {
   winner: null,
 };
 
-export function useOnlineGame(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
+export function useOnlineGame(
+  canvasRef: React.RefObject<HTMLCanvasElement | null>,
+  opts: OnlineGameOptions = {},
+) {
   const wsRef = useRef<WebSocket | null>(null);
   const stateRef = useRef<RemoteState>({ ...initialRemote });
   const phaseRef = useRef<OnlinePhase>("idle");
   const rafRef = useRef<number>(0);
   const [wsKey, setWsKey] = useState(0);
+  const optsRef = useRef(opts);
+  useEffect(() => { optsRef.current = opts; });
 
   const [ui, setUI] = useState<OnlineUI>({
-    phase: "idle", score1: 0, score2: 0, winner: null,
+    phase: "idle", score1: 0, score2: 0, winner: null, player: null,
   });
 
   const updatePhase = useCallback((phase: OnlinePhase) => {
@@ -125,13 +138,20 @@ export function useOnlineGame(canvasRef: React.RefObject<HTMLCanvasElement | nul
       ctx.font = "700 13px Orbitron, monospace";
       ctx.fillText("NEXT ROUND…", CANVAS_W / 2, CANVAS_H / 2 + 6);
     }
+    if (phase === "paused") {
+      ctx.fillStyle = "rgba(248,191,113,0.5)";
+      ctx.font = "700 14px Orbitron, monospace";
+      ctx.fillText("OPPONENT LEFT — WAITING…", CANVAS_W / 2, CANVAS_H / 2 + 6);
+    }
     if (phase === "gameover" && s.winner) {
       ctx.fillStyle = "rgba(205,230,245,0.45)";
       ctx.font = "700 20px Orbitron, monospace";
       ctx.fillText(`PLAYER ${s.winner} WINS`, CANVAS_W / 2, CANVAS_H / 2 - 10);
-      ctx.font = "600 12px Orbitron, monospace";
-      ctx.fillStyle = "rgba(205,230,245,0.25)";
-      ctx.fillText("PRESS REMATCH", CANVAS_W / 2, CANVAS_H / 2 + 18);
+      if (!optsRef.current.tournamentMatchId) {
+        ctx.font = "600 12px Orbitron, monospace";
+        ctx.fillStyle = "rgba(205,230,245,0.25)";
+        ctx.fillText("PRESS REMATCH", CANVAS_W / 2, CANVAS_H / 2 + 18);
+      }
     }
     if (phase === "disconnected") {
       ctx.fillStyle = "rgba(248,113,113,0.5)";
@@ -153,9 +173,24 @@ export function useOnlineGame(canvasRef: React.RefObject<HTMLCanvasElement | nul
   // ── WebSocket ───────────────────────────────────────────────────────────────
   useEffect(() => {
     stateRef.current = { ...initialRemote };
-    const host = window.location.hostname;
-    const ws = new WebSocket(`ws://${host}:8000/ws/pong/`);
+    const proto = window.location.protocol === "https:" ? "wss" : "ws";
+    const origin =
+      window.location.protocol === "https:"
+        ? window.location.host
+        : `${window.location.hostname}:8000`;
+    const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+    const ws = new WebSocket(
+      `${proto}://${origin}/ws/pong/${token ? `?token=${token}` : ""}`,
+    );
     wsRef.current = ws;
+
+    ws.onopen = () => {
+      const matchId = optsRef.current.tournamentMatchId;
+      if (matchId) {
+        ws.send(JSON.stringify({ action: "join_tournament_match", match_id: matchId }));
+        updatePhase("waiting");
+      }
+    };
 
     ws.onmessage = (e) => {
       const data = JSON.parse(e.data);
@@ -164,7 +199,20 @@ export function useOnlineGame(canvasRef: React.RefObject<HTMLCanvasElement | nul
         updatePhase("waiting");
       }
       if (data.type === "match_found") {
+        if (data.player === 1 || data.player === 2) {
+          setUI(prev => ({ ...prev, player: data.player }));
+        }
         updatePhase("playing");
+      }
+      if (data.type === "reconnected") {
+        if (data.player === 1 || data.player === 2) {
+          setUI(prev => ({ ...prev, player: data.player }));
+        }
+        if (data.state) stateRef.current = data.state;
+        updatePhase("playing");
+      }
+      if (data.type === "paused" || data.type === "opponent_left") {
+        updatePhase("paused");
       }
       if (data.type === "game_state") {
         stateRef.current = data.state;
@@ -179,6 +227,12 @@ export function useOnlineGame(canvasRef: React.RefObject<HTMLCanvasElement | nul
           return { ...prev, score1: data.state.score1, score2: data.state.score2, winner: data.state.winner };
         });
       }
+      if (data.type === "game_over") {
+        const winner = (data.winner === 1 || data.winner === 2) ? data.winner : null;
+        setUI(prev => ({ ...prev, winner }));
+        updatePhase("gameover");
+        optsRef.current.onGameOver?.(winner);
+      }
       if (data.type === "player_disconnect") {
         updatePhase("disconnected");
       }
@@ -187,16 +241,22 @@ export function useOnlineGame(canvasRef: React.RefObject<HTMLCanvasElement | nul
     return () => ws.close();
   }, [wsKey, updatePhase]);
 
-  // ── Clavier (keydown/keyup continus pour raquette fluide) ──────────────────
+  const safeSend = useCallback((payload: object) => {
+    const ws = wsRef.current;
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(payload));
+    }
+  }, []);
+
   useEffect(() => {
     const onDown = (e: KeyboardEvent) => {
       if (!["ArrowUp", "ArrowDown"].includes(e.key)) return;
       e.preventDefault();
-      wsRef.current?.send(JSON.stringify({ action: "keydown", key: e.key }));
+      safeSend({ action: "keydown", key: e.key });
     };
     const onUp = (e: KeyboardEvent) => {
       if (!["ArrowUp", "ArrowDown"].includes(e.key)) return;
-      wsRef.current?.send(JSON.stringify({ action: "keyup", key: e.key }));
+      safeSend({ action: "keyup", key: e.key });
     };
     window.addEventListener("keydown", onDown);
     window.addEventListener("keyup", onUp);
@@ -204,21 +264,21 @@ export function useOnlineGame(canvasRef: React.RefObject<HTMLCanvasElement | nul
       window.removeEventListener("keydown", onDown);
       window.removeEventListener("keyup", onUp);
     };
-  }, []);
+  }, [safeSend]);
 
   const findMatch = useCallback(() => {
-    wsRef.current?.send(JSON.stringify({ action: "find_match" }));
+    safeSend({ action: "find_match" });
     updatePhase("waiting");
-  }, [updatePhase]);
+  }, [safeSend, updatePhase]);
 
   const requestRematch = useCallback(() => {
-    wsRef.current?.send(JSON.stringify({ action: "rematch" }));
-  }, []);
+    safeSend({ action: "rematch" });
+  }, [safeSend]);
 
   const reconnect = useCallback(() => {
     updatePhase("idle");
     setWsKey(k => k + 1);
   }, [updatePhase]);
 
-  return { ui, findMatch, requestRematch, reconnect };
+  return { ui, findMatch, requestRematch, reconnect, MAX_SCORE };
 }

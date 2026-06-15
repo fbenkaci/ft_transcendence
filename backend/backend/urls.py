@@ -38,6 +38,12 @@ urlpatterns = [
     path('api/friends/request/send/<str:username>/', send_friend_request, name='send_friend_request'),
     path('api/friends/request/respond/<str:username>/', respond_friend_request, name='respond_friend_request'),
     path('api/friends/remove/<str:username>/', remove_friend, name='remove_friend'),
+    path('api/tournaments/', tournaments, name='tournaments'),
+    path('api/tournaments/<int:tid>/', tournament_detail, name='tournament_detail'),
+    path('api/tournaments/<int:tid>/join/', join_tournament, name='join_tournament'),
+    path('api/tournaments/<int:tid>/leave/', leave_tournament, name='leave_tournament'),
+    path('api/tournaments/<int:tid>/start/', start_tournament, name='start_tournament'),
+    path('api/tournaments/<int:tid>/my-match/', my_tournament_match, name='my_tournament_match'),
     # Bonus: endpoint de health pour la correction
     path('health/', health, name='health'),
     # Bonus: endpoint de status (DB + last_backup)
