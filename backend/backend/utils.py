@@ -10,11 +10,9 @@ client = hvac.Client(
     token=VAULT_TOKEN
 )
 
-def get_env_variable(client, variable_name):
+def get_env_variable(variable_name):
   secrets = client.secrets.kv.read_secret_version(path="transcendance")
   if not secrets:
     return None
   variables = secrets.get("data", {}).get("data", {})
   return variables.get(variable_name)
-
-print(get_env_variable(client, "DB_USER") )
