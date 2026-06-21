@@ -8,21 +8,24 @@ install:
 	cd backend && python3 -m venv env && ./env/bin/pip install -r requirements.txt
 
 build:
-	docker-compose build
+	docker compose build
 
 up:
-	docker-compose up -d
+	docker compose up -d vault
+	sleep 2
+	./docker/vault/init_vault.sh
+	docker compose up -d
 
 start:
-	docker-compose start
+	docker compose start
 
 stop:
-	docker-compose stop
+	docker compose stop
 
 down:
-	docker-compose down --volumes --remove-orphans
+	docker compose down --volumes --remove-orphans
 
 restart: down up
 
 logs:
-	docker-compose logs -f
+	docker compose logs -f

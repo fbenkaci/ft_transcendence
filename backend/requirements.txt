@@ -8,3 +8,9 @@ channels
 daphne
 psycopg2
 prometheus_client
+certifi==2026.6.17
+charset-normalizer==3.4.7
+hvac==2.4.0
+idna==3.18
+requests==2.34.2
+urllib3==2.7.0
