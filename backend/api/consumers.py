@@ -87,10 +87,10 @@ def get_tournament_match_users(tmatch_id):
     try:
         m = TournamentMatch.objects.select_related('player1__user', 'player2__user').get(id=tmatch_id)
     except TournamentMatch.DoesNotExist:
-        return (None, None)
+        return (None, None, None)
     p1 = m.player1.user_id if m.player1 else None
     p2 = m.player2.user_id if m.player2 else None
-    return (p1, p2)
+    return (p1, p2, m.status)
 
 
 def cleanup_room(room):
@@ -410,9 +410,12 @@ class GameConsumer(AsyncWebsocketConsumer):
             await self.send(json.dumps({'type': 'error', 'msg': 'auth_required'}))
             return
 
-        p1_uid, p2_uid = await get_tournament_match_users(match_id)
+        p1_uid, p2_uid, match_status = await get_tournament_match_users(match_id)
         if self.user_id not in (p1_uid, p2_uid):
             await self.send(json.dumps({'type': 'error', 'msg': 'not_a_participant'}))
+            return
+        if match_status == 'finished':
+            await self.send(json.dumps({'type': 'error', 'msg': 'match_over'}))
             return
 
         room = f"tmatch_{match_id}"

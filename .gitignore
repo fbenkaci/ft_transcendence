@@ -12,9 +12,13 @@ backend/venv/
 
 *.sqlite3
 backend/db.sqlite3
-
+/__pycache__/*
 backend/media/
 media/
+
+.env
+*.env
+!.env.example
 
 node_modules/
 frontend/node_modules/

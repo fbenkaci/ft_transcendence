@@ -15,7 +15,8 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, re_path
+from django.views.static import serve as media_serve
 from rest_framework_simplejwt.views import TokenRefreshView
 from api.views import *
 from api.metrics import metrics_view
@@ -51,5 +52,6 @@ urlpatterns = [
     path('metrics/', metrics_view, name='metrics'),
 ]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+urlpatterns += [
+    re_path(r'^media/(?P<path>.*)$', media_serve, {'document_root': settings.MEDIA_ROOT}),
+]

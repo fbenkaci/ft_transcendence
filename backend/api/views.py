@@ -6,7 +6,11 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 from django.shortcuts import get_object_or_404
+from PIL import Image
 from .models import Tournament, TournamentParticipant, TournamentMatch
 from .serializers import TournamentSerializer
 from .tournament_service import create_bracket
@@ -23,12 +27,29 @@ import datetime
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def RegisterView(request):
-    username = request.data.get('username')
-    email = request.data.get('email')
-    password = request.data.get('password')
+    username = (request.data.get('username') or '').strip()
+    email = (request.data.get('email') or '').strip()
+    password = request.data.get('password') or ''
+
+    if not username or not email or not password:
+        return Response({"error": "Username, email et mot de passe requis"}, status=status.HTTP_400_BAD_REQUEST)
+    if len(username) > 150:
+        return Response({"error": "Username trop long"}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        validate_email(email)
+    except ValidationError:
+        return Response({"error": "Email invalide"}, status=status.HTTP_400_BAD_REQUEST)
     if User.objects.filter(username=username).exists():
         return Response({"error": "Username déjà pris"}, status=status.HTTP_400_BAD_REQUEST)
+    if User.objects.filter(email=email).exists():
+        return Response({"error": "Email déjà utilisé"}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        validate_password(password)
+    except ValidationError as e:
+        return Response({"error": " ".join(e.messages)}, status=status.HTTP_400_BAD_REQUEST)
+
     user = User.objects.create_user(username=username, email=email, password=password)
+    Profile.objects.get_or_create(user=user)
     return Response({"message": "Utilisateur créé"}, status=status.HTTP_201_CREATED)
 
 @api_view(['POST'])
@@ -56,9 +77,14 @@ def custom_login(request):
 def verify_2fa_login(request):
     username = request.data.get('username')
     code = request.data.get('code')
-    user = get_object_or_404(User, username=username)
-    profile = user.profile
-    
+    if not username or not code:
+        return Response({"error": "Username et code requis"}, status=status.HTTP_400_BAD_REQUEST)
+
+    user = User.objects.filter(username=username).first()
+    profile = Profile.objects.filter(user=user).first() if user else None
+    if not profile or not profile.is_2fa_enabled or not profile.two_factor_secret:
+        return Response({"error": "Code 2FA invalide"}, status=status.HTTP_400_BAD_REQUEST)
+
     totp = pyotp.TOTP(profile.two_factor_secret)
     if totp.verify(code):
         refresh = RefreshToken.for_user(user)
@@ -77,7 +103,7 @@ def get_user_profile(request):
     return Response({
         "username": user.username,
         "email": user.email,
-        "avatar_url": request.build_absolute_uri(profile.avatar.url) if profile.avatar else None,
+        "avatar_url": profile.avatar.url if profile.avatar else None,
         "wins": profile.wins,
         "losses": profile.losses,
         "is_2fa_enabled": profile.is_2fa_enabled
@@ -94,27 +120,38 @@ def update_profile(request):
 
     if new_password:
         if not old_password or not user.check_password(old_password):
-            return Response({"error": "Ancien mot de passe incorrect"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Ancien mot de passe incorrect sale singe"}, status=status.HTTP_400_BAD_REQUEST)
         user.set_password(new_password)
         user.save()
 
     if avatar:
+        if avatar.size > 5 * 1024 * 1024:
+            return Response({"error": "Image trop lourde (max 5 Mo) t'es fou ou quoi"}, status=status.HTTP_400_BAD_REQUEST)
+        if avatar.content_type not in ('image/jpeg', 'image/png', 'image/gif', 'image/webp'):
+            return Response({"error": "Format d'image non supporté"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            img = Image.open(avatar)
+            img.verify()
+            avatar.seek(0)
+        except Exception:
+            return Response({"error": "Fichier image invalide"}, status=status.HTTP_400_BAD_REQUEST)
+
         profile, created = Profile.objects.get_or_create(user=user)
         profile.avatar = avatar
         profile.save()
         return Response({
-            "message": "Profil mis à jour", 
-            "avatar_url": request.build_absolute_uri(profile.avatar.url)
+            "message": "Profil mis à jour",
+            "avatar_url": profile.avatar.url
         }, status=status.HTTP_200_OK)
 
-    return Response({"message": "Profil mis à jour"}, status=status.HTTP_200_OK)
+    return Response({"message": "Profil mis à jour youhouuu"}, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
 def enable_2fa(request):
     profile = request.user.profile
-    secret = pyotp.random_base32()
+    secret = pyotp.random_base32() 
     profile.two_factor_secret = secret
     profile.save()
     
@@ -134,7 +171,7 @@ def activate_2fa(request):
         profile.is_2fa_enabled = True
         profile.save()
         return Response({"message": "Authentification 2FA activée avec succès."}, status=status.HTTP_200_OK)
-    return Response({"error": "Code invalide. Réessaye."}, status=status.HTTP_400_BAD_REQUEST)
+    return Response({"error": "Code invalide. lis bien."}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 @authentication_classes([JWTAuthentication])
@@ -156,7 +193,7 @@ def get_friends_list(request):
         friends_data.append({
             "username": friend.user.username,
             "status": friend.status,
-            "avatar_url": request.build_absolute_uri(friend.avatar.url) if friend.avatar else None
+            "avatar_url": friend.avatar.url if friend.avatar else None
         })
     return Response({"friends": friends_data}, status=status.HTTP_200_OK)
 
@@ -169,7 +206,7 @@ def send_friend_request(request, username):
     receiver_profile = target_user.profile
 
     if sender_profile == receiver_profile:
-        return Response({"error": "Tu ne peux pas t'ajouter toi-même."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "Tu ne peux pas t'ajouter toi-même (t'a pas d'amis a ce point)."}, status=status.HTTP_400_BAD_REQUEST)
 
     if receiver_profile in sender_profile.friends.all():
         return Response({"error": "Vous êtes déjà amis."}, status=status.HTTP_400_BAD_REQUEST)
@@ -178,7 +215,7 @@ def send_friend_request(request, username):
         return Response({"error": "Demande déjà envoyée en attente."}, status=status.HTTP_400_BAD_REQUEST)
 
     if FriendRequest.objects.filter(sender=receiver_profile, receiver=sender_profile).exists():
-        return Response({"error": f"{username} t'a déjà envoyé une demande. Accepte-la !"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": f"{username} t'a déjà envoyé une demande. Accepte-la SURTOUT PAS!"}, status=status.HTTP_400_BAD_REQUEST)
 
     FriendRequest.objects.create(sender=sender_profile, receiver=receiver_profile)
     return Response({"message": f"Demande envoyée à {username}."}, status=status.HTTP_200_OK)
@@ -204,9 +241,9 @@ def respond_friend_request(request, username):
         return Response({"message": f"Tu es maintenant ami avec {username}."}, status=status.HTTP_200_OK)
     elif action == 'reject':
         friend_req.delete()
-        return Response({"message": f"Demande de {username} refusée."}, status=status.HTTP_200_OK)
+        return Response({"message": f"Demande de {username} refusée cheh."}, status=status.HTTP_200_OK)
     else:
-        return Response({"error": "Action invalide."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "Action invalide wsh t'es fou."}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 @authentication_classes([JWTAuthentication])
@@ -218,8 +255,8 @@ def remove_friend(request, username):
 
     if target_profile in user_profile.friends.all():
         user_profile.friends.remove(target_profile)
-        return Response({"message": f"{username} retiré de tes amis."}, status=status.HTTP_200_OK)
-    return Response({"error": "Cet utilisateur n'est pas ton ami."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"message": f"{username} retiré de tes amis (enfin il etait vrmt tunnel lui)."}, status=status.HTTP_200_OK)
+    return Response({"error": "Cet utilisateur n'est pas ton ami (ouf)."}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
 @authentication_classes([JWTAuthentication])
@@ -228,7 +265,7 @@ def get_friend_requests(request):
     requests = FriendRequest.objects.filter(receiver=request.user.profile)
     data = [{
         "username": req.sender.user.username,
-        "avatar_url": request.build_absolute_uri(req.sender.avatar.url) if req.sender.avatar else None
+        "avatar_url": req.sender.avatar.url if req.sender.avatar else None
     } for req in requests]
     return Response({"requests": data}, status=status.HTTP_200_OK)
 
@@ -243,11 +280,14 @@ def tournaments(request):
         return Response(TournamentSerializer(qs, many=True).data)
 
     name = (request.data.get('name') or '').strip()
-    if not name:
-        return Response({"error": "Nom requis"}, status=status.HTTP_400_BAD_REQUEST)
-    max_players = int(request.data.get('max_players', 8))
-    if max_players < 2:
-        return Response({"error": "max_players doit être >= 2"}, status=status.HTTP_400_BAD_REQUEST)
+    if not name or len(name) > 100:
+        return Response({"error": "Nom requis (100 caractères max)"}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        max_players = int(request.data.get('max_players', 8))
+    except (TypeError, ValueError):
+        return Response({"error": "max_players invalide"}, status=status.HTTP_400_BAD_REQUEST)
+    if not 2 <= max_players <= 64:
+        return Response({"error": "max_players doit être entre 2 et 64"}, status=status.HTTP_400_BAD_REQUEST)
 
     profile, _ = Profile.objects.get_or_create(user=request.user)
     tournament = Tournament.objects.create(name=name, creator=profile, max_players=max_players)
@@ -269,7 +309,7 @@ def tournament_detail(request, tid):
 def join_tournament(request, tid):
     tournament = get_object_or_404(Tournament, id=tid)
     if tournament.status != 'pending':
-        return Response({"error": "Inscriptions fermées"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "Inscriptions fermées (de toute faacon on voulait pas de toi)"}, status=status.HTTP_400_BAD_REQUEST)
     if tournament.participants.count() >= tournament.max_players:
         return Response({"error": "Tournoi complet"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -286,8 +326,10 @@ def join_tournament(request, tid):
 def leave_tournament(request, tid):
     tournament = get_object_or_404(Tournament, id=tid)
     if tournament.status != 'pending':
-        return Response({"error": "Tournoi déjà démarré"}, status=status.HTTP_400_BAD_REQUEST)
-    profile = request.user.profile
+        return Response({"error": "Tournoi déjà démarré  (rentre chez toi c'est mieux)"}, status=status.HTTP_400_BAD_REQUEST)
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+    if tournament.creator_id == profile.id:
+        return Response({"error": "Le créateur ne peut pas quitter son tournoi t'es con ou quoi"}, status=status.HTTP_400_BAD_REQUEST)
     deleted, _ = TournamentParticipant.objects.filter(tournament=tournament, player=profile).delete()
     if not deleted:
         return Response({"error": "Pas inscrit"}, status=status.HTTP_400_BAD_REQUEST)
@@ -302,7 +344,7 @@ def start_tournament(request, tid):
     if tournament.creator != request.user.profile:
         return Response({"error": "Seul le créateur peut démarrer"}, status=status.HTTP_403_FORBIDDEN)
     if tournament.status != 'pending':
-        return Response({"error": "Déjà démarré"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "Déjà démarré wsh sayez arrete frr"}, status=status.HTTP_400_BAD_REQUEST)
     if tournament.participants.count() < 2:
         return Response({"error": "Au moins 2 joueurs requis"}, status=status.HTTP_400_BAD_REQUEST)
 
