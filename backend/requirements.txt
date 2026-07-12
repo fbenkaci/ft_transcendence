@@ -8,3 +8,4 @@ channels
 daphne
 psycopg2
 prometheus_client
+web3

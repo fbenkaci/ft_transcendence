@@ -291,6 +291,18 @@ def tournaments(request):
 
     profile, _ = Profile.objects.get_or_create(user=request.user)
     tournament = Tournament.objects.create(name=name, creator=profile, max_players=max_players)
+    
+    # --- blockchain : enregistrer le tournoi ---
+    try:
+        from blockchain import service
+        service.store_tournament(
+            tournament.id, tournament.name,
+            profile.user.username, tournament.max_players,
+        )
+    except Exception as e:
+        print(f"[blockchain] store_tournament KO: {e}")
+
+
     TournamentParticipant.objects.create(tournament=tournament, player=profile)
     return Response(TournamentSerializer(tournament).data, status=status.HTTP_201_CREATED)
 

@@ -182,3 +182,8 @@ CHANNEL_LAYERS = {
         "BACKEND" : "channels.layers.InMemoryChannelLayer",
     },
 }
+
+
+# --- Blockchain (dev = Ganache) ---
+BLOCKCHAIN_RPC = "http://host.docker.internal:8545" # dev
+BLOCKCHAIN_PRIVATE_KEY = "0x9ce95511ac84f2ac740753aee446f44d643f43ab08a710c541e148a241a67045"

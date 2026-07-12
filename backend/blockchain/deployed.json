@@ -1,0 +1,283 @@
+{
+  "address": "0x47C4Bda0309afe82Ecc52a19050f841777CAFcA9",
+  "abi": [
+    {
+      "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "tournamentId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "matchId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "winner",
+          "type": "string"
+        }
+      ],
+      "name": "MatchRecorded",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "id",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "creator",
+          "type": "string"
+        }
+      ],
+      "name": "TournamentCreated",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "id",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "creator",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "maxPlayers",
+          "type": "uint256"
+        }
+      ],
+      "name": "createTournament",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "tournamentId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "index",
+          "type": "uint256"
+        }
+      ],
+      "name": "getMatch",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "tournamentId",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "matchId",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "round",
+              "type": "uint256"
+            },
+            {
+              "internalType": "string",
+              "name": "player1",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "player2",
+              "type": "string"
+            },
+            {
+              "internalType": "uint8",
+              "name": "score1",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint8",
+              "name": "score2",
+              "type": "uint8"
+            },
+            {
+              "internalType": "string",
+              "name": "winner",
+              "type": "string"
+            },
+            {
+              "internalType": "uint256",
+              "name": "playedAt",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct TournamentScores.MatchResult",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "tournamentId",
+          "type": "uint256"
+        }
+      ],
+      "name": "getMatchCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "tournamentId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "matchId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "round",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "player1",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "player2",
+          "type": "string"
+        },
+        {
+          "internalType": "uint8",
+          "name": "score1",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint8",
+          "name": "score2",
+          "type": "uint8"
+        },
+        {
+          "internalType": "string",
+          "name": "winner",
+          "type": "string"
+        }
+      ],
+      "name": "recordMatch",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "tournaments",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "id",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "creator",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "maxPlayers",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "createdAt",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "exists",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
+}
