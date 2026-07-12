@@ -64,3 +64,31 @@ def store_match(tournament_id, match_id, round_no, player1, player2, score1, sco
 def get_match_count(tournament_id):
     _, contract, _ = _get_contract()
     return contract.functions.getMatchCount(int(tournament_id)).call()
+
+def get_tournament_onchain(chain_key):
+    """Lit un tournoi + ses matchs depuis la blockchain (clé = chain_id.int)."""
+    _, contract, _ = _get_contract()
+    t = contract.functions.tournaments(int(chain_key)).call()
+    if not t[5]:  # exists == False
+        return None
+
+    count = contract.functions.getMatchCount(int(chain_key)).call()
+    matches = []
+    for i in range(count):
+        m = contract.functions.getMatch(int(chain_key), i).call()
+        matches.append({
+            "matchId": m[1], "round": m[2],
+            "player1": m[3], "player2": m[4],
+            "score1": m[5], "score2": m[6],
+            "winner": m[7], "playedAt": m[8],
+        })
+
+    return {
+        "name": t[1],
+        "creator": t[2],
+        "maxPlayers": t[3],
+        "createdAt": t[4],
+        "contractAddress": contract.address,
+        "matches": matches,
+    }
+

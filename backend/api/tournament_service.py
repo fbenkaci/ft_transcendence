@@ -83,7 +83,7 @@ def report_result(match, winner_profile):
     try:
         from blockchain import service
         service.store_match(
-            match.tournament.id,
+            match.tournament.chain_id.int,
             match.id,
             match.round,
             match.player1.user.username if match.player1 else "",
