@@ -22,6 +22,7 @@ import os
 from django.db import connection
 from django.utils import timezone
 import datetime
+from blockchain import service
 
 
 @api_view(['POST'])
@@ -291,6 +292,17 @@ def tournaments(request):
 
     profile, _ = Profile.objects.get_or_create(user=request.user)
     tournament = Tournament.objects.create(name=name, creator=profile, max_players=max_players)
+    
+    # --- blockchain : enregistrer le tournoi ---
+    try:
+        service.store_tournament(
+            tournament.chain_id.int, tournament.name,
+            profile.user.username, tournament.max_players,
+        )
+    except Exception as e:
+        print(f"[blockchain] store_tournament KO: {e}")
+
+
     TournamentParticipant.objects.create(tournament=tournament, player=profile)
     return Response(TournamentSerializer(tournament).data, status=status.HTTP_201_CREATED)
 
@@ -301,6 +313,22 @@ def tournaments(request):
 def tournament_detail(request, tid):
     tournament = get_object_or_404(Tournament, id=tid)
     return Response(TournamentSerializer(tournament).data)
+
+@api_view(['GET'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def tournament_blockchain(request, tid):
+    tournament = get_object_or_404(Tournament, id=tid)
+    try:
+        from blockchain import service
+        data = service.get_tournament_onchain(tournament.chain_id.int)
+    except Exception as e:
+        return Response({"error": f"Blockchain indisponible: {e}"},
+                        status=status.HTTP_503_SERVICE_UNAVAILABLE)
+    if data is None:
+        return Response({"error": "Ce tournoi n'est pas sur la blockchain"},
+                        status=status.HTTP_404_NOT_FOUND)
+    return Response(data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])

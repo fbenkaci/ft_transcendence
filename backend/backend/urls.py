@@ -45,6 +45,7 @@ urlpatterns = [
     path('api/tournaments/<int:tid>/leave/', leave_tournament, name='leave_tournament'),
     path('api/tournaments/<int:tid>/start/', start_tournament, name='start_tournament'),
     path('api/tournaments/<int:tid>/my-match/', my_tournament_match, name='my_tournament_match'),
+    path('api/tournaments/<int:tid>/blockchain/', tournament_blockchain, name='tournament_blockchain'),
     # Bonus: endpoint de health pour la correction
     path('health/', health, name='health'),
     # Bonus: endpoint de status (DB + last_backup)

@@ -79,6 +79,23 @@ def report_result(match, winner_profile):
     match.status = 'finished'
     match.save()
 
+    # --- blockchain : enregistrer le résultat du match ---
+    try:
+        from blockchain import service
+        service.store_match(
+            match.tournament.chain_id.int,
+            match.id,
+            match.round,
+            match.player1.user.username if match.player1 else "",
+            match.player2.user.username if match.player2 else "",
+            0, 0,  # scores non trackés pour l'instant
+            winner_profile.user.username if winner_profile else "",
+        )
+    except Exception as e:
+        print(f"[blockchain] store_match KO: {e}")
+
+
+
     loser = match.player1 if winner_profile == match.player2 else match.player2
     if loser is not None:
         TournamentParticipant.objects.filter(

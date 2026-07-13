@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+import uuid
 
 class Profile(models.Model):
     STATUS_CHOICES = (
@@ -54,6 +55,7 @@ class Tournament(models.Model):
         related_name='tournaments_won', null=True, blank=True,
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    chain_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
     def __str__(self):
         return self.name
