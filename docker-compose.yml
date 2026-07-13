@@ -15,7 +15,7 @@ services:
       - transcendence_net
 
   vault:
-    image: hashicorp/vault:latest
+    image: docker.io/hashicorp/vault:latest
     container_name: transcendence-vault
     ports:
       - "8200:8200"
@@ -29,7 +29,7 @@ services:
     networks:
       - transcendence_net
   db:
-    image: postgres:16-alpine
+    image: docker.io/library/postgres:16-alpine
     container_name: transcendence-db
     restart: unless-stopped #Comportement apres un crash ou reboot (sa redemarre automatiquement)
     env_file:
@@ -49,7 +49,7 @@ services:
       retries: 5
 
   nginx:
-    image: nginx:alpine
+    image: docker.io/library/nginx:alpine
     restart: unless-stopped
     # ports:
       # - "8443:443"
@@ -119,7 +119,7 @@ services:
       - transcendence_net
 
   prometheus:
-    image: prom/prometheus:latest
+    image: docker.io/prom/prometheus:latest
     container_name: transcendence-prometheus
     restart: unless-stopped
     volumes:
@@ -134,7 +134,7 @@ services:
       - transcendence_net
 
   grafana:
-    image: grafana/grafana:latest
+    image: docker.io/grafana/grafana:latest
     container_name: transcendence-grafana
     restart: unless-stopped
     ports:
