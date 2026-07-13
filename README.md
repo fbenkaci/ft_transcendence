@@ -281,3 +281,17 @@ export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>
 * `draw = useCallback(() => {...})`: Uses the HTML5 Canvas API to draw the field, paddles, ball, and texts depending on the game phase
 * `tick = useCallback(() => {...})`: Main loop called by `requestAnimationFrame`. It handles keyboard input for Player 1, calculates the AI movements (Player 2) based on the difficulty level (variable speed factor according to `EASY`, `MEDIUM`, or `HARD`), manages collision physics, and scores
 * `handleStart = useCallback(() => {...})`: Starts or restarts the game by changing the game phase and launching the ball
+
+## Blockchain
+
+- Smart contract: https://testnet.snowtrace.io/address/0xC6F162D76326a65552Be46C08FEA21dd7f1A7975
+
+## Secrets (vault)
+
+docker exec -it transcendence-vault sh
+export VAULT_ADDR="http://127.0.0.1:8200"
+export VAULT_TOKEN="root"
+
+vault kv list secret/                    
+vault kv get secret/transcendance       
+
