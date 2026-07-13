@@ -184,6 +184,5 @@ CHANNEL_LAYERS = {
 }
 
 
-# --- Blockchain (dev = Ganache) ---
-BLOCKCHAIN_RPC = "http://host.docker.internal:8545" # dev
-BLOCKCHAIN_PRIVATE_KEY = "0x9ce95511ac84f2ac740753aee446f44d643f43ab08a710c541e148a241a67045"
+BLOCKCHAIN_RPC = "https://api.avax-test.network/ext/bc/C/rpc"
+BLOCKCHAIN_PRIVATE_KEY = "78d3fadc2016e906e03055656e64373710a215232a8feaacd54b07962f64de7f"
