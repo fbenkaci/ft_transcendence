@@ -10,9 +10,8 @@ _w3 = None
 _contract = None
 _account = None
 
-
+# lazy connection, on se connecte que une fois
 def _get_contract():
-    """Connexion paresseuse : on se connecte une seule fois."""
     global _w3, _contract, _account
     if _contract is not None:
         return _w3, _contract, _account
@@ -26,9 +25,8 @@ def _get_contract():
     )
     return _w3, _contract, _account
 
-
+# sign and send tx
 def _send(fn):
-    """Signe et envoie une transaction d'écriture, attend le minage."""
     w3, contract, account = _get_contract()
     tx = fn.build_transaction({
         "from": account.address,
@@ -40,8 +38,7 @@ def _send(fn):
     return receipt.transactionHash.hex()
 
 
-# ---------- API publique (ce que tes vues appellent) ----------
-
+# setter
 def store_tournament(tournament_id, name, creator, max_players):
     _, contract, _ = _get_contract()
     fn = contract.functions.createTournament(
@@ -59,14 +56,12 @@ def store_match(tournament_id, match_id, round_no, player1, player2, score1, sco
     return _send(fn)
 
 
-# ---------- Lecture (bonus, pour vérifier) ----------
-
+# getter
 def get_match_count(tournament_id):
     _, contract, _ = _get_contract()
     return contract.functions.getMatchCount(int(tournament_id)).call()
 
 def get_tournament_onchain(chain_key):
-    """Lit un tournoi + ses matchs depuis la blockchain (clé = chain_id.int)."""
     _, contract, _ = _get_contract()
     t = contract.functions.tournaments(int(chain_key)).call()
     if not t[5]:  # exists == False
