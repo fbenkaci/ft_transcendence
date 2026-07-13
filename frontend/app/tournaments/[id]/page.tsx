@@ -213,7 +213,7 @@ export default function TournamentDetailPage() {
                   ✓ Données vérifiées on-chain
                 </p>
                 <p style={{ fontSize: "0.7rem", textAlign: "center", opacity: 0.7, wordBreak: "break-all" }}>
-                  Contrat : {chain.contractAddress}
+                  <a href="https://testnet.snowtrace.io/address/0xC6F162D76326a65552Be46C08FEA21dd7f1A7975" className="cursor-pointer hover:underline hover:text-white" target="_blank">Contrat : {chain.contractAddress}</a>
                 </p>
                 <p className="tagline" style={{ textAlign: "center" }}>
                   {chain.name} · créé par {chain.creator} · {chain.maxPlayers} joueurs max
