@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 from datetime import timedelta
 from pathlib import Path
+from .utils import get_env_variable
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -22,10 +23,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get(
-    'DJANGO_SECRET_KEY',
-    'django-insecure-x%2#kbdwbx@o19a^gb*1&edooqdcu(osxzh11l(fknn7v*0hqb',
-)
+SECRET_KEY = get_env_variable("SECRET_KEY")
+print("Vault SECRET_KEY loaded:", SECRET_KEY[:25])
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() in ('1', 'true', 'yes')
@@ -185,4 +184,4 @@ CHANNEL_LAYERS = {
 
 
 BLOCKCHAIN_RPC = "https://api.avax-test.network/ext/bc/C/rpc"
-BLOCKCHAIN_PRIVATE_KEY = "78d3fadc2016e906e03055656e64373710a215232a8feaacd54b07962f64de7f"
+BLOCKCHAIN_PRIVATE_KEY = get_env_variable("BLOCKCHAIN_PRIVATE_KEY")

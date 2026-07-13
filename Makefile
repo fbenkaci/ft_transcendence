@@ -11,6 +11,9 @@ build:
 	docker compose build
 
 up:
+	docker compose up -d vault
+	sleep 2
+	./docker/vault/init_vault.sh
 	docker compose up -d
 
 start:

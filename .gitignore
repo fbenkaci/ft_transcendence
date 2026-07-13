@@ -37,3 +37,4 @@ CLAUDE.md
 .vscode/
 
 docker/backups/
+vault_backend_token.txt
