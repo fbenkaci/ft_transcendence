@@ -1,4 +1,19 @@
 services:
+
+  waf:
+    image: owasp/modsecurity-crs:4.25.0-nginx-lts
+    container_name: transcendence-waf
+    restart: unless-stopped
+    ports:
+      - "8443:443"
+    volumes:
+      - ./docker/waf/waf.conf:/etc/nginx/conf.d/custom.conf:ro
+      - ./docker/nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - nginx
+    networks:
+      - transcendence_net
+
   vault:
     image: hashicorp/vault:latest
     container_name: transcendence-vault
@@ -36,8 +51,8 @@ services:
   nginx:
     image: nginx:alpine
     restart: unless-stopped
-    ports:
-      - "8443:443"
+    # ports:
+      # - "8443:443"
     volumes:
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - ./docker/nginx/ssl:/etc/nginx/ssl:ro
