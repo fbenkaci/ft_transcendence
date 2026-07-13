@@ -141,6 +141,7 @@ def get_user_profile(request):
     user = request.user
     profile, _ = Profile.objects.get_or_create(user=user)
     return Response({
+        "id": user.id,
         "username": user.username,
         "email": user.email,
         "avatar_url": profile.avatar.url if profile.avatar else None,

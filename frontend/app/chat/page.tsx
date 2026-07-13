@@ -16,10 +16,10 @@ export function useChat(room: string | null) {
     
     const fetchHistory = async () => {
       const token = localStorage.getItem('access_token');
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://localhost:8443';
       
       try {
-        const res = await fetch(`${backendUrl}/api/chat/${room}/history/`, {
+        // Utilisation d'un chemin relatif pour passer par Nginx
+        const res = await fetch(`/api/chat/${room}/history/`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
@@ -39,7 +39,8 @@ export function useChat(room: string | null) {
     if (!room) return;
 
     const proto = window.location.protocol === 'https:' ? 'wss' : 'ws';
-    const origin = window.location.protocol === 'https:' ? window.location.host : `${window.location.hostname}:8000`;
+    // On utilise simplement le host actuel car Nginx gère la route /ws/
+    const origin = window.location.host; 
     const token = localStorage.getItem('access_token');
     
     const ws = new WebSocket(`${proto}://${origin}/ws/chat/${room}/?token=${token||''}`);
@@ -90,21 +91,19 @@ export default function ChatPage() {
       return;
     }
 
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://localhost:8443';
-
     const fetchMyData = async () => {
       try {
-        // Récupérer mon profil
-        const resMe = await fetch(`${backendUrl}/api/me/`, {
+        // Récupérer mon profil avec chemin relatif
+        const resMe = await fetch(`/api/me/`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (resMe.ok) {
           const dataMe = await resMe.json();
-          setMyId(dataMe.id);
+          setMyId(dataMe.id); // Maintenant `id` est bien renvoyé par le backend
         }
 
-        // Récupérer mes amis
-        const resFriends = await fetch(`${backendUrl}/api/my-friends/`, {
+        // Récupérer mes amis avec chemin relatif
+        const resFriends = await fetch(`/api/my-friends/`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (resFriends.ok) {
