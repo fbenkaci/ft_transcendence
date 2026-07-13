@@ -95,7 +95,7 @@ class TournamentMatch(models.Model):   # était TorunamentMatch
         return f"R{self.round}.{self.slot}: {self.player1} vs {self.player2}"
     
 
-class Message(model.Model):
+class Message(models.Model):
     room = models.CharField(max_length=200, db_index=True)
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_message')
     content = models.TextField()

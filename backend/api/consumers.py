@@ -499,21 +499,25 @@ class GameConsumer(AsyncWebsocketConsumer):
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
+        self.group_name = None
         user = self.scope.get('user')
-        if not user not not user.is_authenticated:
-            await slef.close()
+        
+        if not user or not user.is_authenticated:
+            await self.close()
             return
-        # recup la room depuis le path params ou le querystring
+            
         self.room = self.scope['url_route']['kwargs'].get('room')
         if not await self.user_allowed(self.scope['user'], self.room):
             await self.close()
             return
+            
         self.group_name = f"chat_{self.room}"
         await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.accept()
 
     async def disconnect(self, close_code):
-        await self.channel_layer.group_discard(self.group_name, self.channel_name)
+        if hasattr(self, 'group_name') and self.group_name:
+            await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
     async def receive(self, text_data):
         data = json.loads(text_data)
@@ -538,10 +542,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def user_allowed(self, user, room):
-        # Exemple minimal: si room = "chat_{min}_{max}" vérifier que user.id est min ou max.
+        # Pour une room nommée "chat_1_5" -> parts[1] = 1, parts[2] = 5
         try:
             parts = room.split('_')
-            a,b = int(parts[1]), int(parts[2])
-            return user.id in (a,b)
+            a, b = int(parts[1]), int(parts[2])
+            return user.id in (a, b)
         except Exception:
             return False

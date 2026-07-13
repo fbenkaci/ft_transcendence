@@ -23,8 +23,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = get_env_variable("SECRET_KEY")
-print("Vault SECRET_KEY loaded:", SECRET_KEY[:25])
+SECRET_KEY = get_env_variable("SECRET_KEY", "django-insecure-dev-secret")
+print("Vault SECRET_KEY loaded:", SECRET_KEY[:25] if SECRET_KEY else "fallback")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() in ('1', 'true', 'yes')
@@ -184,4 +184,4 @@ CHANNEL_LAYERS = {
 
 
 BLOCKCHAIN_RPC = "https://api.avax-test.network/ext/bc/C/rpc"
-BLOCKCHAIN_PRIVATE_KEY = get_env_variable("BLOCKCHAIN_PRIVATE_KEY")
+BLOCKCHAIN_PRIVATE_KEY = get_env_variable("BLOCKCHAIN_PRIVATE_KEY", "")
