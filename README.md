@@ -1,4 +1,4 @@
-# This project has been created as part of the 42 curriculum by Hguiller, Molapoug, Miltavar, Fbenkaci
+# This project has been created as part of the 42 curriculum by Hguiller, Molapoug, Miltavar, Fbenkaci and Mben-tha
 
 # Description
 
@@ -52,6 +52,31 @@ Here is a curated list of the essential resources and documentation that helped 
 
 ___
 
+
+# Roles
+
+# Molapoug:
+Product Manager
+
+___
+
+# Hguiller
+Product Owner
+
+___
+
+# Fbenkaci
+Technical lead / architect
+
+___
+
+# Miltavar
+Developers
+
+# Mben-tha
+Developers
+
+___
 
 # Documentation :
 
