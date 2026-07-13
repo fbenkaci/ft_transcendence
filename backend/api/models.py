@@ -94,3 +94,13 @@ class TournamentMatch(models.Model):   # était TorunamentMatch
     def __str__(self):
         return f"R{self.round}.{self.slot}: {self.player1} vs {self.player2}"
     
+
+class Message(model.Model):
+    room = models.CharField(max_length=200, db_index=True)
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_message')
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    read = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['created_at']

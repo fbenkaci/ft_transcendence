@@ -52,3 +52,10 @@ class UserSerializer(serializers.ModelSerializer):
 			password=validated_data['password']
 		)
 		return user
+
+class MessageSerializer(serializers.ModelSerializer):
+	sender_username = serializers.CharField(source='sender.username', read_only=True)
+
+	class Meta:
+		model = Message
+		fields = ['id', 'room', 'sender', 'sender_username', 'content', 'created_at', 'read']
