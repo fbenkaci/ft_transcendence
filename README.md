@@ -33,7 +33,7 @@ to test the front : [https://localhost:8443](https://localhost:8443)
 
 Here is a curated list of the essential resources and documentation that helped build this Website.
 
-### 🌐 HTTP Protocol
+### 🌐 Code ressources
 * **[Complet cours about TS](http://fr.scribd.com/document/535050709/Cours-TypeScript) :** an complet cours about how coding in TS
 * **[Doc Django](https://django.readthedocs.io/en/stable/contents.html) :** full django documentation.
 * **[Css style](https://uiverse.io/):** an website for the frontweb ellements.
@@ -281,5 +281,3 @@ export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>
 * `draw = useCallback(() => {...})`: Uses the HTML5 Canvas API to draw the field, paddles, ball, and texts depending on the game phase
 * `tick = useCallback(() => {...})`: Main loop called by `requestAnimationFrame`. It handles keyboard input for Player 1, calculates the AI movements (Player 2) based on the difficulty level (variable speed factor according to `EASY`, `MEDIUM`, or `HARD`), manages collision physics, and scores
 * `handleStart = useCallback(() => {...})`: Starts or restarts the game by changing the game phase and launching the ball
-
-
