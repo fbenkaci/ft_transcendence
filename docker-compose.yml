@@ -48,6 +48,8 @@ services:
       - transcendence_net
 
   backend:
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # dev ganache local blockcahn
     build:
       context: ./backend
     container_name: transcendence-backend

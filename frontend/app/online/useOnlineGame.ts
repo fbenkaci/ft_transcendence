@@ -236,6 +236,9 @@ export function useOnlineGame(
       if (data.type === "player_disconnect") {
         updatePhase("disconnected");
       }
+      if (data.type === "error") {
+        updatePhase("disconnected");
+      }
     };
 
     return () => ws.close();

@@ -25,18 +25,33 @@ export default function Page() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (!username.trim() || !email.trim() || !password) {
+      setError("Tous les champs sont requis.");
+      return;
+    }
+    if (password.length < 8) {
+      setError("Le mot de passe doit faire au moins 8 caractères.");
+      return;
+    }
+
+    if (password == "password") {
+      setError("Abuse frero sur le mot de passe");
+      return;
+    }
+
     try {
       const res = await fetch("/api/register/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email, password }),
+        body: JSON.stringify({ username: username.trim(), email: email.trim(), password }),
       });
 
       if (res.ok) {
         router.push("/login");
       } else {
         const data = await res.json();
-        setError(JSON.stringify(data));
+        setError(data.error || "Inscription impossible.");
       }
     } catch (err) {
       setError("Erreur de connexion au serveur.");
@@ -83,6 +98,8 @@ export default function Page() {
               placeholder="Username"
               className="tr-input"
               autoComplete="username"
+              required
+              maxLength={150}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
             />
@@ -91,6 +108,7 @@ export default function Page() {
               placeholder="Email"
               className="tr-input"
               autoComplete="email"
+              required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -99,6 +117,8 @@ export default function Page() {
               placeholder="Password"
               className="tr-input"
               autoComplete="new-password"
+              required
+              minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
