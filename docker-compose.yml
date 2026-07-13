@@ -1,14 +1,14 @@
 services:
 
   waf:
-    image: owasp/modsecurity-crs:4.25.0-nginx-lts
+    image: docker.io/owasp/modsecurity-crs:nginx
     container_name: transcendence-waf
     restart: unless-stopped
     ports:
-      - "8443:443"
+      - "8443:8443"
     volumes:
-      - ./docker/waf/waf.conf:/etc/nginx/conf.d/custom.conf:ro
-      - ./docker/nginx/ssl:/etc/nginx/ssl:ro
+      - ./docker/waf/waf.conf:/etc/nginx/conf.d/custom.conf:ro,Z
+      - ./docker/nginx/ssl:/etc/nginx/ssl:ro,Z
     depends_on:
       - nginx
     networks:
@@ -83,7 +83,7 @@ services:
       - ./backend:/app
       - media_data:/app/media
       - ./docker/backups:/backups
-      - ./vault_backend_token.txt:/run/secrets/vault_token:ro
+      - ./:/secrets_dir:ro
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health/')\""]
       interval: 30s

@@ -22,6 +22,7 @@ from api.views import *
 from api.metrics import metrics_view
 from django.conf.urls.static import static
 from django.conf import settings
+from api import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -46,6 +47,8 @@ urlpatterns = [
     path('api/tournaments/<int:tid>/start/', start_tournament, name='start_tournament'),
     path('api/tournaments/<int:tid>/my-match/', my_tournament_match, name='my_tournament_match'),
     path('api/tournaments/<int:tid>/blockchain/', tournament_blockchain, name='tournament_blockchain'),
+    path('api/my-friends/', views.get_my_friends, name='get_my_friends'),
+    path('api/chat/<str:room_name>/history/', views.get_chat_history, name='get_chat_history'),
     # Bonus: endpoint de health pour la correction
     path('health/', health, name='health'),
     # Bonus: endpoint de status (DB + last_backup)

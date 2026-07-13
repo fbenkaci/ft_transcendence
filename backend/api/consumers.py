@@ -7,6 +7,9 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from channels.layers import get_channel_layer
 from django.db.models import F
+from .models import Message
+from .serializers import MessageSerializer
+
 
 CANVAS_W = 800
 CANVAS_H = 500
@@ -492,3 +495,57 @@ class GameConsumer(AsyncWebsocketConsumer):
 
     async def opponent_left(self, event):
         await self.send(json.dumps({'type': 'opponent_left'}))
+
+
+class ChatConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        self.group_name = None
+        user = self.scope.get('user')
+        
+        if not user or not user.is_authenticated:
+            await self.close()
+            return
+            
+        self.room = self.scope['url_route']['kwargs'].get('room')
+        if not await self.user_allowed(self.scope['user'], self.room):
+            await self.close()
+            return
+            
+        self.group_name = f"chat_{self.room}"
+        await self.channel_layer.group_add(self.group_name, self.channel_name)
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        if hasattr(self, 'group_name') and self.group_name:
+            await self.channel_layer.group_discard(self.group_name, self.channel_name)
+
+    async def receive(self, text_data):
+        data = json.loads(text_data)
+        action = data.get('action')
+        if action == 'send_message':
+            content = data.get('content','').strip()
+            if not content:
+                return
+            msg = await self.create_message(self.room, self.scope['user'], content)
+            payload = {
+                'type': 'chat.message',
+                'message': MessageSerializer(msg).data,
+            }
+            await self.channel_layer.group_send(self.group_name, payload)
+
+    async def chat_message(self, event):
+        await self.send(json.dumps(event['message']))
+
+    @database_sync_to_async
+    def create_message(self, room, user, content):
+        return Message.objects.create(room=room, sender=user, content=content)
+
+    @database_sync_to_async
+    def user_allowed(self, user, room):
+        # Pour une room nommée "chat_1_5" -> parts[1] = 1, parts[2] = 5
+        try:
+            parts = room.split('_')
+            a, b = int(parts[1]), int(parts[2])
+            return user.id in (a, b)
+        except Exception:
+            return False

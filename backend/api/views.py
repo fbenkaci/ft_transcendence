@@ -23,7 +23,46 @@ from django.db import connection
 from django.utils import timezone
 import datetime
 from blockchain import service
+from .models import Profile, Message
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_me(request):
+    """Renvoie l'ID de l'utilisateur connecté"""
+    return Response({
+        'id': request.user.id,
+        'username': request.user.username
+    })
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_my_friends(request):
+    """Renvoie la liste de tes amis avec leur statut"""
+    profile = Profile.objects.get(user=request.user)
+    friends = profile.friends.all()
+    data = []
+    for f in friends:
+        data.append({
+            'id': f.user.id,
+            'username': f.user.username,
+            'status': f.status,
+            'avatar': f.avatar.url if f.avatar else None
+        })
+    return Response(data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_chat_history(request, room_name):
+    """Renvoie l'historique des anciens messages d'une room"""
+    messages = Message.objects.filter(room=room_name).order_by('created_at')
+    data = []
+    for m in messages:
+        data.append({
+            'sender': m.sender.id,
+            'content': m.content,
+            'created_at': m.created_at
+        })
+    return Response(data)
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -102,6 +141,7 @@ def get_user_profile(request):
     user = request.user
     profile, _ = Profile.objects.get_or_create(user=user)
     return Response({
+        "id": user.id,
         "username": user.username,
         "email": user.email,
         "avatar_url": profile.avatar.url if profile.avatar else None,

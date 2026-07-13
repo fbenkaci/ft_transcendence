@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from .models import Tournament, TournamentParticipant, TournamentMatch
+from .models import Tournament, TournamentParticipant, TournamentMatch, Message
 
 
 class TournamentMatchSerializer(serializers.ModelSerializer):
@@ -52,3 +52,10 @@ class UserSerializer(serializers.ModelSerializer):
 			password=validated_data['password']
 		)
 		return user
+
+class MessageSerializer(serializers.ModelSerializer):
+	sender_username = serializers.CharField(source='sender.username', read_only=True)
+
+	class Meta:
+		model = Message
+		fields = ['id', 'room', 'sender', 'sender_username', 'content', 'created_at', 'read']

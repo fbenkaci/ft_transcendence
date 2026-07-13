@@ -1,6 +1,6 @@
 .PHONY: all install build up start stop down restart logs
 
-all: up
+all: down build up
 
 install:
 	@echo "Installation des dépendances frontend et backend gngngn"
