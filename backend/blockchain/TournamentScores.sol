@@ -3,11 +3,10 @@ pragma solidity ^0.8.19;
 
 contract TournamentScores {
 
-    // --- Propriétaire : seul ton backend pourra écrire ---
     address public owner;
 
     constructor() {
-        owner = msg.sender;   // celui qui déploie devient owner
+        owner = msg.sender;
     }
 
     modifier onlyOwner() {
@@ -55,7 +54,6 @@ contract TournamentScores {
         uint256 playedAt;
     }
 
-    // tournamentId -> liste de ses matchs
     mapping(uint256 => MatchResult[]) private matchesByTournament;
 
     event MatchRecorded(uint256 indexed tournamentId, uint256 matchId, string winner);
@@ -76,8 +74,6 @@ contract TournamentScores {
         ));
         emit MatchRecorded(tournamentId, matchId, winner);
     }
-
-    // ---------- LECTURES (gratuit) ----------
 
     function getMatchCount(uint256 tournamentId) external view returns (uint256) {
         return matchesByTournament[tournamentId].length;
