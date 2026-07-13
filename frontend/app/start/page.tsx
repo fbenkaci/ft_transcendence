@@ -83,6 +83,10 @@ export default function Page() {
 			<Link href="/tournaments" className="btn-ghost">
 			  🏆 Tournaments
 			</Link>
+
+			<Link href="/chat" className="btn-ghost">
+				Chat
+			</Link>
 		</div>
 	  </div>
 	</main>

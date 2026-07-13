@@ -272,6 +272,9 @@ export default function Page() {
       </div>
 
       <Link href="/" className="home-btn"><House className="w-6 h-6" /></Link>
+      <Link href="/chat" className="account-btn">
+				Chat
+			</Link>
       <div className="net" aria-hidden="true" />
     </main>
   )
