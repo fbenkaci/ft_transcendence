@@ -224,12 +224,11 @@ export default function TournamentDetailPage() {
                 )}
 
                 {chainRounds.map((r) => (
-                  <div key={r} className="tr-round">
+                  <div key={r} className="tr-brackets">
                     <span className="tr-round-title">Round {r}</span>
                     {chain.matches.filter((m) => m.round === r).map((m, i) => (
                       <div key={i} className="tr-match done">
                         <span className={`tr-seat ${m.winner === m.player1 ? "win" : ""}`}>{m.player1 || "—"}</span>
-                        <span className="tr-vs">{m.score1}-{m.score2}</span>
                         <span className={`tr-seat ${m.winner === m.player2 ? "win" : ""}`}>{m.player2 || "(bye)"}</span>
                       </div>
                     ))}
